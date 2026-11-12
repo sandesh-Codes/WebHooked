@@ -1,2 +1,3 @@
-const port: number = 3000;
-console.log(`api starting on port ${port}`);
+import { SERVICE_NAME } from "@my-project/shared";
+
+console.log(`${SERVICE_NAME} api starting`);
