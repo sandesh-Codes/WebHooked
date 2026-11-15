@@ -44,6 +44,24 @@ app.get("/endpoints", async (_req, res) => {
   res.json(result.rows);
 });
 
+app.post("/events", async (req, res) => {
+  const { type, payload } = req.body;
+
+  if (!type || payload === undefined) {
+    res.status(400).json({ error: "type and payload are required" });
+    return;
+  }
+
+  const result = await pool.query(
+    `INSERT INTO events (type, payload)
+     VALUES ($1, $2)
+     RETURNING id, type, payload, created_at`,
+    [type, payload]
+  );
+
+  res.status(201).json(result.rows[0]);
+});
+
 app.listen(port, () => {
     console.log(`${SERVICE_NAME} api listening on port ${port}`);
 });
