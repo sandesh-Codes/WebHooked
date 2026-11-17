@@ -19,6 +19,18 @@ if (delivery) {
   const body = JSON.stringify({ type: delivery.type, payload: delivery.payload });
   const timestamp = Math.floor(Date.now() / 1000).toString();
   const signature = signPayload(delivery.secret, timestamp, body);
+
+  const response = await fetch(delivery.url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Webhook-Timestamp": timestamp,
+      "X-Webhook-Signature": signature,
+    },
+    body,
+  });
+
+  console.log("response status:", response.status);
 }
 
 await pool.end();
