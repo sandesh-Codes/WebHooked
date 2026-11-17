@@ -19,10 +19,6 @@ if (delivery) {
   const body = JSON.stringify({ type: delivery.type, payload: delivery.payload });
   const timestamp = Math.floor(Date.now() / 1000).toString();
   const signature = signPayload(delivery.secret, timestamp, body);
-
-  console.log("body:", body);
-  console.log("timestamp:", timestamp);
-  console.log("signature:", signature);
 }
 
 await pool.end();
