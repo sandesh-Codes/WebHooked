@@ -31,6 +31,16 @@ if (delivery) {
   });
 
   console.log("response status:", response.status);
+
+   if (response.ok) {
+    await pool.query(
+      `UPDATE deliveries
+       SET status = 'delivered', attempt_count = attempt_count + 1
+       WHERE id = $1`,
+      [delivery.id]
+    );
+    console.log("marked delivered:", delivery.id);
+  }
 }
 
 await pool.end();
