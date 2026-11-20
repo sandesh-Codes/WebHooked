@@ -4,6 +4,7 @@ import { signPayload } from "./sign.js";
 const maxAttempts = 5;
 const pollIntervalMilliseconds = 1000;
 const leaseSeconds = 60;
+const sendTimeoutMilliseconds = 10000;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -50,6 +51,7 @@ async function processOne(): Promise<boolean> {
         "X-Webhook-Signature": signature,
       },
       body,
+      signal: AbortSignal.timeout(sendTimeoutMilliseconds)
     });
 
     console.log("response status:", response.status);
