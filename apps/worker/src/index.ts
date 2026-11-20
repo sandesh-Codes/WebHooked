@@ -3,6 +3,7 @@ import { signPayload } from "./sign.js";
 
 const maxAttempts = 5;
 const pollIntervalMilliseconds = 1000;
+const leaseSeconds = 60;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -10,13 +11,26 @@ function sleep(ms: number): Promise<void> {
 
 async function processOne(): Promise<boolean> {
   const result = await pool.query(
-    `SELECT d.id, d.attempt_count, e.type, e.payload, ep.url, ep.secret
-     FROM deliveries d
-     JOIN events e ON e.id = d.event_id
-     JOIN endpoints ep ON ep.id = d.endpoint_id
-     WHERE d.status = 'pending' AND d.next_attempt_at <= now()
-     ORDER BY d.next_attempt_at
-     LIMIT 1`
+    `WITH claimed AS (
+       SELECT id
+       FROM deliveries
+       WHERE status = 'pending' AND next_attempt_at <= now()
+       ORDER BY next_attempt_at
+       LIMIT 1
+       FOR UPDATE SKIP LOCKED
+     ),
+     leased AS (
+       UPDATE deliveries d
+       SET next_attempt_at = now() + make_interval(secs => $1)
+       FROM claimed
+       WHERE d.id = claimed.id
+       RETURNING d.id, d.event_id, d.endpoint_id, d.attempt_count
+     )
+     SELECT l.id, l.attempt_count, e.type, e.payload, ep.url, ep.secret
+     FROM leased l
+     JOIN events e ON e.id = l.event_id
+     JOIN endpoints ep ON ep.id = l.endpoint_id`,
+    [leaseSeconds]
   );
 
   const delivery = result.rows[0];

@@ -27,8 +27,10 @@ const server = http.createServer((req, res) => {
         console.log("signature valid:", valid);
         console.log("---");
 
-        res.writeHead(valid ? 200 : 401, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ ok: valid }));
+        setTimeout(() => {
+            res.writeHead(valid ? 200 : 401, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ ok: valid }));
+        }, 15000);
     });
 });
 
