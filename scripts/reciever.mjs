@@ -20,22 +20,23 @@ const server = http.createServer((req, res) => {
   req.on("end", () => {
     const timestamp = req.headers["x-webhook-timestamp"] ?? "";
     const signature = req.headers["x-webhook-signature"] ?? "";
+    const webhookId = req.headers["x-webhook-id"] ?? "";
 
     const expected = createHmac("sha256", secret)
-      .update(timestamp + body)
+      .update(`${webhookId}.${timestamp}.${body}`)
       .digest("hex");
 
     const a = Buffer.from(signature);
     const b = Buffer.from(expected);
     const valid = a.length === b.length && timingSafeEqual(a, b);
 
-    console.log(req.method, req.url);
-    console.log("body:", body);
-    console.log("webhook id:", req.headers["x-webhook-id"]);
-    console.log("signature valid:", valid);
-    console.log("---");
+    if (!valid) {
+      console.log("invalid signature, rejecting:", webhookId);
+      res.writeHead(401, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: false }));
+      return;
+    }
 
-    const webhookId = req.headers["x-webhook-id"];
     if (seenIds.has(webhookId)) {
       console.log("duplicate, skipping:", webhookId);
     } else {
@@ -43,7 +44,13 @@ const server = http.createServer((req, res) => {
       console.log("new delivery, processing:", webhookId);
     }
 
-    res.writeHead(valid ? 200 : 401, { "Content-Type": "application/json" });
+    console.log(req.method, req.url);
+    console.log("body:", body);
+    console.log("webhook id:", webhookId);
+    console.log("signature valid:", valid);
+    console.log("---");
+
+    res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ ok: valid }));
   });
 });

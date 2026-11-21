@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 
-export function signPayload(secret: string, timestamp: string, body: string): string {
+export function signPayload(secret: string, id: string, timestamp: string, body: string): string {
   return createHmac("sha256", secret)
-    .update(timestamp + body)
+    .update(`${id}.${timestamp}.${body}`)
     .digest("hex");
 }
