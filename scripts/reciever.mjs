@@ -2,6 +2,7 @@ import http from "node:http";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const seenIds = new Set();
+const maxAgeOfEventsSeconds = 300;
 
 const secret = process.env.RECEIVER_SECRET;
 
@@ -32,6 +33,14 @@ const server = http.createServer((req, res) => {
 
     if (!valid) {
       console.log("invalid signature, rejecting:", webhookId);
+      res.writeHead(401, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: false }));
+      return;
+    }
+
+    const ageSeconds = Math.abs(Date.now() / 1000 - Number(timestamp));
+    if (!(ageSeconds <= maxAgeOfEventsSeconds)) {
+      console.log("timestamp too old, rejecting:", webhookId);
       res.writeHead(401, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ ok: false }));
       return;
