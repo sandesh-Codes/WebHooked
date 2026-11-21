@@ -49,6 +49,7 @@ async function processOne(): Promise<boolean> {
         "Content-Type": "application/json",
         "X-Webhook-Timestamp": timestamp,
         "X-Webhook-Signature": signature,
+        "X-Webhook-Id": delivery.id,
       },
       body,
       signal: AbortSignal.timeout(sendTimeoutMilliseconds)
