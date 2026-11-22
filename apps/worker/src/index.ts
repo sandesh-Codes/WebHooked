@@ -5,6 +5,12 @@ const maxAttempts = 5;
 const pollIntervalMilliseconds = 1000;
 const leaseSeconds = 60;
 const sendTimeoutMilliseconds = 10000;
+let shuttingDown = false;
+
+process.on("SIGINT", () => {
+  console.log("shutdown requested, finishing current work...");
+  shuttingDown = true;
+})
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -102,7 +108,7 @@ async function processOne(): Promise<boolean> {
 
 console.log("worker starting");
 
-while (true) {
+while (!shuttingDown) {
   try {
     const didWork = await processOne();
     if (!didWork) await sleep(pollIntervalMilliseconds);
@@ -111,3 +117,5 @@ while (true) {
     await sleep(pollIntervalMilliseconds);
   }
 }
+
+console.log("worker stopped");
