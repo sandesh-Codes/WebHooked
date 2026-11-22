@@ -7,10 +7,13 @@ const leaseSeconds = 60;
 const sendTimeoutMilliseconds = 10000;
 let shuttingDown = false;
 
-process.on("SIGINT", () => {
-  console.log("shutdown requested, finishing current work...");
+function requestShutdown(signal: string) {
+  console.log(`${signal} received, finishing current work...`);
   shuttingDown = true;
-})
+}
+
+process.on("SIGINT", () => requestShutdown("SIGINT"));
+process.on("SIGTERM", () => requestShutdown("SIGTERM"));
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
