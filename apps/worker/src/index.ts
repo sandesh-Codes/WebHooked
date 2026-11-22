@@ -118,4 +118,5 @@ while (!shuttingDown) {
   }
 }
 
+await pool.end();
 console.log("worker stopped");
