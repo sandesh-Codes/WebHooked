@@ -55,7 +55,7 @@ app.post("/events", async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-
+    
     const eventResult = await client.query(
       `INSERT INTO events (type, payload)
        VALUES ($1, $2)
@@ -66,19 +66,18 @@ app.post("/events", async (req, res) => {
 
     const deliveryResult = await client.query(
       `INSERT INTO deliveries (event_id, endpoint_id)
-       SELECT $1, id FROM endpoints WHERE is_active = true`,
+      SELECT $1, id FROM endpoints WHERE is_active = true`,
       [event.id],
     );
-
+    
     await client.query("COMMIT");
-
+    
     res
-      .status(201)
-      .json({ event, deliveries_created: deliveryResult.rowCount });
+    .status(201)
+    .json({ event, deliveries_created: deliveryResult.rowCount });
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error(err);
-    res.status(500).json({ error: "failed to create event" });
+    throw err;
   } finally {
     client.release();
   }
