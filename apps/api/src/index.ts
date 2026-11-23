@@ -1,6 +1,7 @@
 import express from "express";
 import { pool } from "./db.js";
 import { randomBytes } from "node:crypto";
+import type { ErrorRequestHandler } from "express";
 import { SERVICE_NAME } from "@my-project/shared";
 
 const app = express();
@@ -8,9 +9,8 @@ app.use(express.json());
 
 const port = 3000;
 
-
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok", service: SERVICE_NAME })
+  res.json({ status: "ok", service: SERVICE_NAME });
 });
 
 app.get("/health/db", async (_req, res) => {
@@ -60,19 +60,21 @@ app.post("/events", async (req, res) => {
       `INSERT INTO events (type, payload)
        VALUES ($1, $2)
        RETURNING id, type, payload, created_at`,
-      [type, payload]
+      [type, payload],
     );
     const event = eventResult.rows[0];
 
     const deliveryResult = await client.query(
       `INSERT INTO deliveries (event_id, endpoint_id)
        SELECT $1, id FROM endpoints WHERE is_active = true`,
-      [event.id]
+      [event.id],
     );
 
     await client.query("COMMIT");
 
-    res.status(201).json({ event, deliveries_created: deliveryResult.rowCount });
+    res
+      .status(201)
+      .json({ event, deliveries_created: deliveryResult.rowCount });
   } catch (err) {
     await client.query("ROLLBACK");
     console.error(err);
@@ -82,9 +84,13 @@ app.post("/events", async (req, res) => {
   }
 });
 
+const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+  console.error("unhandled error:", err);
+  res.status(500).json({ error: "internal server error" });
+};
 
+app.use(errorHandler);
 
-
-  app.listen(port, () => {
-    console.log(`${SERVICE_NAME} api listening on port ${port}`);
-  });
+app.listen(port, () => {
+  console.log(`${SERVICE_NAME} api listening on port ${port}`);
+});
