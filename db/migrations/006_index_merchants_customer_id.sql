@@ -1,0 +1,1 @@
+CREATE INDEX merchants_customer_id_idx ON merchants (customer_id);

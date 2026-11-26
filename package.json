@@ -9,7 +9,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "migrate": "node --env-file=.env scripts/migrate.mjs"
   },
   "keywords": [],
   "author": "",

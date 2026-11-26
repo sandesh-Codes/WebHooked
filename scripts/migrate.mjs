@@ -42,7 +42,7 @@ async function main() {
   }
 
   console.log(
-    applied === 0 ? "nothing to apply" : `filenames, applied ${applied}`,
+    applied === 0 ? "nothing to apply" : `done, applied ${applied}`,
   );
 }
 
